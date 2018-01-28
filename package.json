@@ -18,11 +18,13 @@
     "express-graphql": "^0.6.11",
     "graphql": "^0.11.7",
     "graphql-tag": "^2.6.1",
+    "immutability-helper": "^2.6.4",
     "mongoose": "^5.0.1",
     "path": "^0.12.7",
     "react": "^16.2.0",
     "react-apollo": "^2.0.4",
-    "react-dom": "^16.2.0"
+    "react-dom": "^16.2.0",
+    "react-svg-piechart": "^2.0.3"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

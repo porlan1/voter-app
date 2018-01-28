@@ -14,7 +14,7 @@ var optionSchema = new mongoose.Schema({
 
 var pollSchema = new mongoose.Schema({
   name: String,
-  options: [OptionSchema]
+  options: [optionSchema]
 });
 
 var Option = mongoose.model('Option', optionSchema);
@@ -23,68 +23,83 @@ var Poll = mongoose.model('Poll', pollSchema);
 
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
-	input PersonInput {
-    	name: String
-    	favoriteFood: String
-    	favoriteDessert: String
-  	}
-	type Person {
-		id: ID!
-    	name: String
-    	favoriteFood: String
-    	favoriteDessert: String
-    }
-  	type Query {
-  		getPerson(id: ID!): Person
-  		getPeople: [Person]!
-  	}
-  	type Mutation {
-  		createPerson(input: PersonInput!): Person
-  		updatePerson(id: ID!, input: PersonInput!): Person
-  	}
+	input PollInput {
+    name: String
+    options: [OptionInput]
+  }
+  input OptionInput {
+    name: String
+    votes: Int
+  }
+  type Poll {
+    _id: String
+    name: String
+    options: [Option]
+  }
+  type Option {
+    name: String
+    votes: Int
+  }
+	type Query {
+		getPoll(_id: String): Poll
+		getPolls: [Poll]!
+	}
+	type Mutation {
+		createPoll(input: PollInput!): Poll
+		updatePoll(_id: String, input: PollInput!): Poll
+	}
 `);
 
-var fakeDatabase = {};
-
-function Person(id, {name, favoriteFood, favoriteDessert}) {
-	this.id = id;
-	this.name = name;
-	this.favoriteFood = favoriteFood;
-	this.favoriteDessert = favoriteDessert;
+function idConverter(obj) {
+  if (obj._id) {
+    obj._id = obj._id.toString();
+  }
+  return obj;
 }
 // The root provides a resolver function for each API endpoint
 var root = {
-  getPerson: function ({id}) {
-    if (!fakeDatabase[id]) {
-      throw new Error('no person exists with id ' + id);
-    }
-    return new Person(id, fakeDatabase[id]);
+  getPoll: ({_id})=>{
+    var query = Poll.findOne({_id: mongoose.Types.ObjectId(_id)});
+    return queryPromiseCreator(query);
   },
-  getPeople: function () {
-  	var people = [];
-    for (let key in fakeDatabase) {
-    	people.push(new Person(key, fakeDatabase[key]));
-    }
-    return people
+  getPolls: () => {
+    var query = Poll.find({});
+    return queryPromiseCreator(query);
   },
-  createPerson: function ({input}) {
-    // Create a random id for our "database".
-    var id = require('crypto').randomBytes(10).toString('hex');
-    console.log(id);
-    fakeDatabase[id] = input;
-    console.log(input);
-    console.log(fakeDatabase);
-    return new Person(id, input);
+  createPoll: ({input}) => {
+    var poll = new Poll(input);
+    return savePromiseCreator(poll);
   },
-  updatePerson: function ({id, input}) {
-    if (!fakeDatabase[id]) {
-      throw new Error('no person exists with id ' + id);
-    }
-    // This replaces all old data, but some apps might want partial update.
-    fakeDatabase[id] = input;
-    return new Person(id, input);
+  updatePoll: ({_id, input}) => {
+    var query = Poll.findByIdAndUpdate(mongoose.Types.ObjectId(_id));
+    return queryPromiseCreator(query);
   },
 };
+
+function queryPromiseCreator(query) {
+  return new Promise((resolve, reject) => {
+    query.exec((err, result)=>{
+      if (err) {
+        console.log(err);
+        reject();
+      }
+      result = Array.isArray(result)? result.map((el)=>{return idConverter(el)}): idConverter(result);
+      resolve(result);
+    })
+  })
+}
+
+function savePromiseCreator(obj) {
+  return new Promise((resolve, reject) => {
+    obj.save((err, result)=>{
+      if (err) {
+        console.log(err);
+        reject();
+      }
+      resolve(idConverter(result));
+    })
+  })
+}
 
 var app = express();
 app.use(express.static(path.join(__dirname, '../client')));
