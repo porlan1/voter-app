@@ -71,7 +71,11 @@ var root = {
     return savePromiseCreator(poll);
   },
   updatePoll: ({_id, input}) => {
-    var query = Poll.findByIdAndUpdate(mongoose.Types.ObjectId(_id));
+    console.log('_id');
+    console.log(_id);
+    console.log('input');
+    console.log(input);
+    var query = Poll.findByIdAndUpdate(mongoose.Types.ObjectId(_id), {$set: {options: input.options}});
     return queryPromiseCreator(query);
   },
 };
@@ -83,6 +87,8 @@ function queryPromiseCreator(query) {
         console.log(err);
         reject();
       }
+      console.log('result')
+      console.log(result)
       result = Array.isArray(result)? result.map((el)=>{return idConverter(el)}): idConverter(result);
       resolve(result);
     })

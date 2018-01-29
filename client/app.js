@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import gql from 'graphql-tag';
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import update from 'immutability-helper';
-import PieChart from "react-svg-piechart"
+import {PieChart} from 'react-easy-chart';
 
 class App extends Component {
 	render(){
@@ -101,31 +101,44 @@ class PollList extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {polls: []};
+		this.voteCallback = this.voteCallback.bind(this);
 	}
 	componentWillMount() {
-		console.log('CWL');
-		console.log('Data:');
-		console.log(this.props.data);
-		this.props.data.refetch().then(function(res)
+		this.props.getPolls.refetch().then(function(res)
 			{console.log(res);
 				console.log(res.data.getPolls);
 				this.setState({polls: res.data.getPolls})}.bind(this));
 	}
+	voteCallback(index, data) {
+		this.props.updatePoll({
+			variables: 
+				{id: this.state.polls[index]._id, 
+				input: {name: this.state.polls[index].name, options: data}
+				}
+			}).then((res)=>{
+				var newPolls = update(this.state.polls, {[index]: {options: {$set: data}}});
+			this.setState({polls: newPolls});
+		});
+	}
 	render() {
-		console.log(this.state);
 		return(
 			<div>
-				{this.state.polls.map((el)=>{
-					return(<div key = {el._id}>
-						<h1>{el.name}</h1>
-						<VoteInPoll options={el.options} callback = {()=>{}}/>
-						<PieChart data = {el.options.map((option)=>{
-							return {title: option.name,
-								value: option.votes,
-								color: 'rgb(' + (Math.random()*255) + ',' + (Math.random()*255) + ',' + (Math.random()*255) + ')'}
-							})}
-						/>
-						</div>);
+				{this.state.polls.map((el, index)=>{
+					return(<div key = {el._id} style={{backgroundColor: 'gray', borderRadius: '10px', height: '250px'}}>
+						<h1 style = {{marginLeft: '10px'}}><u>{el.name}</u></h1>
+						<VoteInPoll options={el.options} callback = {this.voteCallback.bind(this, index)}/>
+						<div style={{position: "absolute", marginLeft: '50%', marginTop: '-25px'}}>
+							{el.options.reduce((accumulator, option)=>{return accumulator + option.votes}, 0) > 0?
+								<PieChart size = {200} labels data = {el.options.map((option)=>{
+									let color = 'rgb(' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ')';
+									return {key: option.name,
+										value: option.votes,
+										color: color}
+									})}
+								/>
+							: null}
+						</div>
+					</div>);
 					})}
 			</div>
 		)
@@ -144,13 +157,10 @@ class Vote extends Component{
 		this.radioChange = this.radioChange.bind(this);
 	}
 	radioChange(index, e) {
-		console.log(e.target.value);
-		var newVotes = this.state.options[index].votes++;
-		var newOptions = update(this.state.options, {[index]:{votes: {$set: newVotes}}});
-		if (this.state.selectedOptionIndex !== -1) {
-			newVotes = this.state.options[this.state.selectedOptionIndex].votes--;
-			newOptions = update(this.state.options, {[this.state.selectedOptionIndex]:{votes: {$set: newVotes}}});
-		}
+		var newVotes = this.state.options[index].votes+1;
+		var newOptions = this.props.options.map((el, i)=>{
+			return {name: el.name, votes: i===index? el.votes+1:el.votes}
+		});
 
 		this.setState({
 			options: newOptions,
@@ -158,11 +168,11 @@ class Vote extends Component{
 		});
 	}
 	render() {
-	return <div>
+	return <div style={{position: 'absolute', marginLeft: '10px'}}>
 		{this.state.options.map((el, index)=>{
-			return <label key = {Math.random()} htmlFor={el.name + index}>{el.name}
+			return <label style={{display: "block"}} key = {Math.random()} htmlFor={el.name + index}>{el.name}
 						<input type="radio" id={el.name + index}
-     						name={index} value={index}
+     						name={index} value={index} checked = {index === this.state.selectedOptionIndex}
      						onChange = {this.radioChange.bind(null, index)} />
     				</label>
 			})
@@ -184,7 +194,8 @@ const VoteInPoll = graphql(gql`mutation updatePoll($id: String, $input: PollInpu
 	}
 }`)(Vote);
 
-const GetPollList = graphql(gql`query { 
+const GetPollList = compose(
+	graphql(gql`query { 
 			getPolls{
 				_id
 				name
@@ -193,6 +204,16 @@ const GetPollList = graphql(gql`query {
 					votes
 				}
 			}
-		}`)(PollList);
+		}`, {name: 'getPolls'}),
+	graphql(gql`mutation updatePoll($id: String, $input: PollInput!) { 
+			updatePoll(_id: $id, input: $input){
+				_id
+				name
+				options {
+					name
+					votes
+				}
+			}
+		}`, {name: 'updatePoll'}))(PollList);
 
 export default App;
