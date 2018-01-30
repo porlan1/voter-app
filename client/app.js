@@ -25,6 +25,7 @@ class AddPoll extends Component {
 		this.onClick = this.onClick.bind(this);
 		this.addOption = this.addOption.bind(this);
 		this.deleteOption = this.deleteOption.bind(this);
+		this.login = this.login.bind(this);
 	}
 	input(name, event) {
 		console.log(event.target.value);
@@ -55,9 +56,13 @@ class AddPoll extends Component {
 		var newOptions = update(this.state.options, {$splice: [[this.state.options.length-1, 1]]})
 		this.setState({options: newOptions});
 	}
+	login() {
+		fetch('/login');
+	}
 	render() {
 		return(
 			<div>
+				<button onClick={this.login}>Login</button>
 				<label>
 					Name
 					<input type = "text"

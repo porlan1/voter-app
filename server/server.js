@@ -115,9 +115,19 @@ app.use('/graphql', graphqlHTTP({
   graphiql: true,
 }));
 
+app.use('/login', (req, res)=>{
+  var clientID = '?client_id=' + process.env.CLIENT_ID;
+  //var redirectURI = encodeURIComponent('?redirect_uri=' + process.env.REDIRECT_URI);
+  var redirectURL = 'https://github.com/login/oauth/authorize' + clientID;
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  res.redirect(redirectURL);
+});
+
 app.use('/auth_callback', (req, res)=>{
   console.log('github auth');
   //redirect to homepage and logged in
+  res.send('authorized!!!');
 });
 app.listen(4000);
 console.log('Running a GraphQL API server at localhost:4000/graphql');
