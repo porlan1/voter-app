@@ -57,7 +57,7 @@ class AddPoll extends Component {
 		this.setState({options: newOptions});
 	}
 	login() {
-		fetch('/login');
+		window.location = '/login';
 	}
 	render() {
 		return(

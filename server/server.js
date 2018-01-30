@@ -3,6 +3,7 @@ var path = require('path');
 var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
 var mongoose = require('mongoose');
+var request = require('request');
 require('dotenv').config();
 
 mongoose.connect(process.env.MONGO_DB_URI);
@@ -115,12 +116,9 @@ app.use('/graphql', graphqlHTTP({
   graphiql: true,
 }));
 
-app.use('/login', (req, res)=>{
+app.use('/login', (req, res, next)=>{
   var clientID = '?client_id=' + process.env.CLIENT_ID;
-  //var redirectURI = encodeURIComponent('?redirect_uri=' + process.env.REDIRECT_URI);
   var redirectURL = 'https://github.com/login/oauth/authorize' + clientID;
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
   res.redirect(redirectURL);
 });
 
