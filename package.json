@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "apollo-client-preset": "^1.0.6",
+    "bootstrap": "^4.0.0",
     "crypto": "^1.0.1",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
@@ -21,17 +22,19 @@
     "immutability-helper": "^2.6.4",
     "mongoose": "^5.0.1",
     "path": "^0.12.7",
+    "querystring": "^0.2.0",
     "react": "^16.2.0",
     "react-apollo": "^2.0.4",
     "react-dom": "^16.2.0",
     "react-easy-chart": "^1.0.0",
+    "reactstrap": "^5.0.0-beta",
     "request": "^2.83.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-react-app": "^3.1.0",
-    "css-loader": "^0.28.8",
+    "css-loader": "^0.28.9",
     "style-loader": "^0.19.1",
     "webpack": "^3.10.0"
   },

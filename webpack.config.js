@@ -2,10 +2,10 @@ var path = require('path');
 var webpack = require('webpack');
 
  module.exports = {
-    entry: './client/index.js',
+    entry: {index: './client/index.js', user: './client/user_entry.js'},
     output: {
         path: path.resolve(__dirname, 'client'),
-        filename: 'index.bundle.js'
+        filename: '[name].bundle.js'
     },
     module: {
         rules: [

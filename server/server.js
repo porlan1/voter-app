@@ -4,6 +4,7 @@ var graphqlHTTP = require('express-graphql');
 var { buildSchema } = require('graphql');
 var mongoose = require('mongoose');
 var request = require('request');
+var qs = require('querystring');
 require('dotenv').config();
 
 mongoose.connect(process.env.MONGO_DB_URI);
@@ -18,8 +19,15 @@ var pollSchema = new mongoose.Schema({
   options: [optionSchema]
 });
 
+var pollSchema = new mongoose.Schema({
+  name: String,
+  _user: mongoose.Schema.Types.ObjectId,
+  options: [optionSchema]
+});
+
 var Option = mongoose.model('Option', optionSchema);
 var Poll = mongoose.model('Poll', pollSchema);
+var User = mongoose.model('User', pollSchema);
 
 
 // Construct a schema, using GraphQL schema language
@@ -32,8 +40,12 @@ var schema = buildSchema(`
     name: String
     votes: Int
   }
+  type User {
+    _id: String
+  }
   type Poll {
     _id: String
+    _user: User
     name: String
     options: [Option]
   }
@@ -122,10 +134,24 @@ app.use('/login', (req, res, next)=>{
   res.redirect(redirectURL);
 });
 
+app.use('/logout', (req, res, next)=>{
+  //
+});
+
 app.use('/auth_callback', (req, res)=>{
   console.log('github auth');
   //redirect to homepage and logged in
   res.send('authorized!!!');
+  var url = 'https://github.com/login/oauth/access_token';
+  request.post({url: url, 
+    form: {client_secret: process.env.CLIENT_SECRET,
+      client_id: process.env.CLIENT_ID,
+      code: req.params['code']}}, (error, response, body)=>{
+        var perm_data = qs.parse(body);
+        console.log(perm_data);
+        //here we could make a user in the db to track what they do.
+    res.redirect('/index.html')
+  });
 });
 app.listen(4000);
 console.log('Running a GraphQL API server at localhost:4000/graphql');
