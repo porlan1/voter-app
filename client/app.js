@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import TopNavBar from './topNavBar';
 import GetPollList from './getPollList'
+import './app.css';
 
 class App extends Component {
 	render(){

@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 import { graphql, compose } from 'react-apollo';
 import update from 'immutability-helper';
 import {PieChart} from 'react-easy-chart';
+import { Collapse, Button, CardBody, Card } from 'reactstrap';
+import './app.css';
 
 class PollList extends Component {
 	constructor(props) {
@@ -31,24 +33,43 @@ class PollList extends Component {
 		return(
 			<div style = {{padding: '10px'}}>
 				{this.state.polls.map((el, index)=>{
-					return(<div key = {el._id} style={{backgroundColor: 'gray', borderRadius: '10px', textAlign: 'center', padding: '5px', marginBottom: '10px'}}>
-						<h1><u>{el.name}</u></h1>
-						<div>
-							{el.options.reduce((accumulator, option)=>{return accumulator + option.votes}, 0) > 0?
-								<PieChart size = {200} labels data = {el.options.map((option)=>{
-									let color = 'rgb(' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ')';
-									return {key: option.name,
+					return(
+						<IndividualPoll key = {el._id} el={el} voteCallback={this.voteCallback.bind(this, index)}/>);
+					})}
+			</div>
+		)
+	}
+}
+
+class IndividualPoll extends Component {
+	constructor(props){
+		super(props);
+		this.state = {collapse: false};
+		this.toggle = this.toggle.bind(this);
+	}	
+	toggle(){
+		this.setState({collapse: !this.state.collapse});
+	}
+	render(){
+		return(
+			<div style={{backgroundColor: 'gray', borderRadius: '10px', textAlign: 'center', padding: '5px', marginBottom: '10px'}}>
+				<h1 className= 'poll-hover' style={{width: '100%', cursor: 'pointer'}} onClick={this.toggle}>{this.props.el.name}</h1>
+				<Collapse isOpen = {this.state.collapse}>
+				<div>
+					{this.props.el.options.reduce((accumulator, option)=>{return accumulator + option.votes}, 0) > 0?
+					<PieChart size = {200} labels data = {this.props.el.options.map((option)=>{
+						let color = 'rgb(' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ',' + Math.floor((Math.random()*255)) + ')';
+							return {key: option.name,
 										value: option.votes,
 										color: color}
 									})}
 								/>
 							: null}
-						</div>
-						<VoteInPoll options={el.options} callback = {this.voteCallback.bind(this, index)}/>
-					</div>);
-					})}
+				</div>
+				<VoteInPoll options={this.props.el.options} callback = {this.props.voteCallback}/>
+				</Collapse>
 			</div>
-		)
+		);
 	}
 }
 

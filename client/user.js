@@ -6,6 +6,7 @@ import {PieChart} from 'react-easy-chart';
 import TopNavBar from './topNavBar';
 import AddPollApollo from './addPollApollo';
 import GetPollList from './getPollList';
+import './app.css';
 
 class User extends Component {
 	render(){
@@ -13,6 +14,9 @@ class User extends Component {
 			<div>
 				<TopNavBar />
 				<AddPollApollo/>
+				<div style={{textAlign: 'center', borderBottom: '2px solid black', marginBottom: '20px', }}>
+					<h1>My Polls</h1>
+				</div>
 				<GetPollList/>
 			</div>
 		);
